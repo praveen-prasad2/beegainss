@@ -51,6 +51,9 @@
 :root {
   --font-monument: "Monument", var(--font-geist-sans), ui-sans-serif, system-ui;
   --font-poppins: "Poppins", var(--font-geist-sans), ui-sans-serif, system-ui;
+  --background: #F8F4E8;
+  --orange: #F58331;
+  --foreground: #111827;
 }
 
 .font-monument {
@@ -61,7 +64,27 @@
   font-family: var(--font-poppins);
 }
 
+.text-orange {
+  color: var(--orange);
+}
 
+.bg-orange {
+  background-color: var(--orange);
+}
+
+.border-orange {
+  border-color: var(--orange);
+}
+
+.hover-orange:hover {
+  color: var(--orange);
+}
+
+@layer utilities {
+  .hover\:text-orange:hover {
+    color: var(--orange);
+  }
+}
 
 body {
   background: var(--background);
