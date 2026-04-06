@@ -5,7 +5,7 @@ const INSTAGRAM_URL = "https://www.instagram.com/reel/C9zfuXWytbD/";
 
 export const Vision = () => {
   return (
-    <section className="flex flex-row flex-wrap items-center gap-12 px-[110px] py-5 leading-none">
+    <section className="flex flex-row flex-wrap items-center gap-12 px-[110px] py-20 leading-none">
       <div className="relative  w-[min(20%,200px)] h-[320px] shrink-0 overflow-hidden rounded-[20px] bg-neutral-800 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.25)]">
         <div
           className="pointer-events-none absolute inset-0 bg-linear-to-br from-slate-600 via-slate-700 to-slate-900"
