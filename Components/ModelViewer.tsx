@@ -75,6 +75,8 @@ export default function ModelViewer() {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    THREE.Cache.enabled = true;
+
     const mount = mountRef.current;
     if (!mount) return;
 

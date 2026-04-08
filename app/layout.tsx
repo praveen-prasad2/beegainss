@@ -32,7 +32,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-   
+      <head>
+        <link
+          rel="preload"
+          href="/models/bee/scene.glb"
+          as="fetch"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <SmoothScroll>
           <Header />
