@@ -14,7 +14,7 @@ export const Story = () => {
       </section>
       {/* Text Section */}
       <section className="w-1/2 h-[500px] px-[110px] flex flex-col gap-4">
-        <h2 className="text-left font-monument text-[60px]">
+        <h2 className="text-left font-clashdisplay text-[60px] font-semibold">
           Our <br /> Story
         </h2>
         <p className="text-left font-normal font-poppins text-[18px] text-black">

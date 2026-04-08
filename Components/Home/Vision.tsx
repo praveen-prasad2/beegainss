@@ -35,7 +35,7 @@ export const Vision = () => {
       </div>
 
       <div className="flex min-w-[30%,200px] flex-1 flex-col items-start justify-center gap-4">
-        <h2 className="text-left font-monument text-[62px]">
+        <h2 className="text-left font-clashdisplay text-[62px] font-semibold">
           The <br /> Bee <br /> Vision
         </h2>
         <p className="text-left font-poppins text-[18px] text-orange">

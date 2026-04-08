@@ -22,11 +22,11 @@ export default function Hero() {
   return (
     <main className="flex flex-col h-screen items-center justify-start bg-[url('/home/grid-bg.svg')] bg-cover bg-center leading-none py-10">
       <section>
-        <h1 className="text-[62px] font-monument text-center text-orange">
-          FUEL YOUR <br />
+        <h1 className="text-[82px] font-clashdisplay text-center text-orange font-semibold">
+          Fuel Your <br />
           <span className="relative inline-block">
-            DIGITAL FUTURE.
-            <span className="absolute left-full bottom-[10px] ml-2 text-[24px] font-monument text-black">
+            Digital Future.
+            <span className="absolute left-full bottom-[10px] ml-2 text-[24px] font-clashdisplay text-black">
               {word}
             </span>
           </span>

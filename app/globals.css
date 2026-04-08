@@ -1,17 +1,33 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "Monument";
-  src: url("/fonts/monument/MonumentExtended-Regular.otf") format("opentype");
+  font-family: "Clash Display";
+  src: url("/fonts/clashdisplay/ClashDisplay-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Monument";
-  src: url("/fonts/monument/MonumentExtended-Ultrabold.otf") format("opentype");
-  font-weight: 800;
+  font-family: "Clash Display";
+  src: url("/fonts/clashdisplay/ClashDisplay-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Clash Display";
+  src: url("/fonts/clashdisplay/ClashDisplay-Semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Clash Display";
+  src: url("/fonts/clashdisplay/ClashDisplay-Bold.otf") format("opentype");
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -49,15 +65,15 @@
 }
 
 :root {
-  --font-monument: "Monument", var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-clashdisplay: "Clash Display", var(--font-geist-sans), ui-sans-serif, system-ui;
   --font-poppins: "Poppins", var(--font-geist-sans), ui-sans-serif, system-ui;
   --background: #F8F4E8;
   --orange: #F58331;
   --foreground: #111827;
 }
 
-.font-monument {
-  font-family: var(--font-monument);
+.font-clashdisplay {
+  font-family: var(--font-clashdisplay);
 }
 
 .font-poppins {

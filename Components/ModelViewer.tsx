@@ -13,7 +13,17 @@ const FLOAT_POINTS = [
   { left: 64, top: 70 },
 ] as const;
 
-const INITIAL_ROTATION_Y = -Math.PI / 2;
+const INITIAL_ROTATION_Y = Math.PI / 2 + Math.PI;
+
+function pickFlyingClip(clips: THREE.AnimationClip[]) {
+  const byName = clips.find((c) => /fly|flying|wing/i.test(c.name));
+  if (byName) return byName;
+
+  const nonRest = clips.filter((c) => !/idle|rest|resting|sit|stand|sleep|landing|take_off_and_land|take_off/i.test(c.name));
+  const pool = nonRest.length ? nonRest : clips;
+
+  return pool.reduce((best, c) => (c.duration > best.duration ? c : best), pool[0]);
+}
 
 function floatAt(t: number) {
   const p = THREE.MathUtils.clamp(t, 0, 1);
@@ -27,6 +37,40 @@ function floatAt(t: number) {
   };
 }
 
+function fitCameraToObject(
+  camera: THREE.PerspectiveCamera,
+  object: THREE.Object3D,
+  renderer: THREE.WebGLRenderer,
+  fitRatio = 0.5
+) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  // center the model at origin so rotation doesn't swing it out of frame
+  object.position.sub(center);
+
+  const width = size.x;
+  const height = size.y;
+  const depth = size.z;
+
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const aspect = renderer.domElement.width / renderer.domElement.height;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+
+  const distanceForHeight = (height / 2) / Math.tan(vFov / 2);
+  const distanceForWidth = (width / 2) / Math.tan(hFov / 2);
+  const distance = Math.max(distanceForHeight, distanceForWidth) / fitRatio;
+
+  camera.position.set(0, 0, distance + depth / 2);
+  camera.near = Math.max(0.01, (distance - depth * 2) / 10);
+  camera.far = distance + depth * 10;
+  camera.updateProjectionMatrix();
+  camera.lookAt(0, 0, 0);
+}
+
 export default function ModelViewer() {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -36,14 +80,17 @@ export default function ModelViewer() {
 
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(25, 1, 0.1, 1000);
-    camera.position.z = 10;
+    const camera = new THREE.PerspectiveCamera(15, 1, 0.1, 1000);
+    camera.position.z = 6;
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1;
+
+    let model: THREE.Object3D | undefined;
+    let mixer: THREE.AnimationMixer | undefined;
 
     const resizeRenderer = () => {
       const el = mountRef.current;
@@ -54,6 +101,7 @@ export default function ModelViewer() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      if (model) fitCameraToObject(camera, model, renderer);
     };
 
     resizeRenderer();
@@ -67,11 +115,8 @@ export default function ModelViewer() {
     scene.add(light);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight.position.set(2, 2, 5);
+    dirLight.position.set(2, 5, 5);
     scene.add(dirLight);
-
-    let model: THREE.Object3D | undefined;
-    let mixer: THREE.AnimationMixer | undefined;
     const clock = new THREE.Clock();
     let rafId: number | undefined;
     let targetScrollProgress = 0;
@@ -79,20 +124,25 @@ export default function ModelViewer() {
     let smoothRotationY = INITIAL_ROTATION_Y;
     const scrollDamp = 28;
     const rotationDamp = 16;
-    const scrollRotateMul = Math.PI * 2.75;
+    const maxYaw = Math.PI / 2; // front <-> side only
+    const frontShakeAmp = 0.06;
+    const frontShakeFreq = 6.5;
 
     const loader = new GLTFLoader();
     loader.load("/models/bee/scene.glb", (gltf: GLTF) => {
       model = gltf.scene;
 
-      model.scale.set(1.4, 1.4, 1.4);
-      model.position.set(0, 0, 0);
+      model.scale.set(1.5, 1.5, 1.5);
 
       scene.add(model);
+      fitCameraToObject(camera, model, renderer);
 
       if (gltf.animations?.length) {
         mixer = new THREE.AnimationMixer(model);
-        gltf.animations.forEach((clip) => mixer!.clipAction(clip).play());
+        const clip = pickFlyingClip(gltf.animations);
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
       }
     });
 
@@ -113,20 +163,27 @@ export default function ModelViewer() {
       mount.style.top = `${top}%`;
 
       if (model) {
-        model.position.y = 0;
-        model.position.x = 0;
-        model.position.z = 0;
         model.rotation.x = 0;
         model.rotation.z = 0;
-        const targetRotationY =
-          INITIAL_ROTATION_Y + smoothScrollProgress * scrollRotateMul;
+
+        // triangle wave: 0 at ends (front), 1 at middle (side)
+        const viewT = 1 - Math.abs(2 * smoothScrollProgress - 1);
+        const targetRotationY = INITIAL_ROTATION_Y + viewT * maxYaw;
+
         smoothRotationY = THREE.MathUtils.damp(
           smoothRotationY,
           targetRotationY,
           rotationDamp,
           dt
         );
-        model.rotation.y = smoothRotationY;
+
+        // slight "head shake" when near front view (viewT ~ 0)
+        const frontness = 1 - viewT;
+        const shakeWeight = frontness * frontness;
+        const shake = Math.sin(clock.elapsedTime * frontShakeFreq) * frontShakeAmp * shakeWeight;
+
+        model.rotation.y = smoothRotationY + shake;
+        camera.lookAt(0, 0, 0);
       }
       renderer.render(scene, camera);
     };
@@ -155,8 +212,8 @@ export default function ModelViewer() {
   return (
     <div
       ref={mountRef}
-      className="pointer-events-none fixed z-1 h-[min(500px,40vw)] w-[min(500px,40vw)] shrink-0 -translate-x-1/2 -translate-y-1/2"
-      style={{ left: "10%", top: "6%" }}
+      className="pointer-events-none fixed z-1 h-[min(500px,40vw)] w-[min(800px,80vw)] shrink-0 -translate-x-1/2 -translate-y-1/2"
+      style={{ left: "30%", top: "6%" }}
     />
   );
 }
